@@ -16,7 +16,7 @@ missing debug (dependencies): not in the lockfile (package.json wants ^4)
 3 problems. Run `npm install` to update the lockfile.
 ```
 
-Or just `node lockdrift.js [dir]`. Exit code 0 when in sync, 1 on drift, 2 when
+Or just `node lockdrift.js [dir]`. Add `--json` for machine-readable output. `npm-shrinkwrap.json` is read when there is no `package-lock.json`. Exit code 0 when in sync, 1 on drift, 2 when
 a file is missing, so it works as a CI pre-check.
 
 ## What it checks

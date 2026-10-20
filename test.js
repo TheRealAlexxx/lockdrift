@@ -76,3 +76,19 @@ test('CLI exit codes and output', () => {
   assert.match(bad.stdout, /range\s+a/);
   assert.strictEqual(spawnSync('node', [path.join(__dirname, 'lockdrift.js'), path.join(dir, 'nope')]).status, 2);
 });
+
+test('--json prints the problems and keeps the exit code', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ld-'));
+  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ dependencies: { a: '^3.0.0' } }));
+  fs.writeFileSync(path.join(dir, 'package-lock.json'), JSON.stringify(lockV3({ dependencies: { a: '^3.0.0' } }, { 'node_modules/a': { version: '2.1.0' } })));
+  const r = spawnSync('node', [path.join(__dirname, 'lockdrift.js'), dir, '--json'], { encoding: 'utf8' });
+  assert.strictEqual(r.status, 1);
+  assert.deepStrictEqual(JSON.parse(r.stdout).map((p) => p.kind), ['range']);
+});
+
+test('npm-shrinkwrap.json is used when there is no package-lock.json', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ld-'));
+  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ dependencies: { a: '^1.0.0' } }));
+  fs.writeFileSync(path.join(dir, 'npm-shrinkwrap.json'), JSON.stringify(lockV3({ dependencies: { a: '^1.0.0' } }, { 'node_modules/a': { version: '1.0.0' } })));
+  assert.strictEqual(spawnSync('node', [path.join(__dirname, 'lockdrift.js'), dir]).status, 0);
+});

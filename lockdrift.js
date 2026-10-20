@@ -54,12 +54,14 @@ function load(file) {
 }
 
 function main(argv) {
-  const dir = argv[0] || '.';
+  const dir = argv.find((a) => !a.startsWith('--')) || '.';
   const pkgFile = path.join(dir, 'package.json');
-  const lockFile = path.join(dir, 'package-lock.json');
+  const json = argv.includes('--json');
+  const lockFile = ['package-lock.json', 'npm-shrinkwrap.json'].map((f) => path.join(dir, f)).find((f) => fs.existsSync(f)) || path.join(dir, 'package-lock.json');
   if (!fs.existsSync(pkgFile)) { console.error('no package.json in ' + dir); return 2; }
   if (!fs.existsSync(lockFile)) { console.error('no package-lock.json in ' + dir); return 2; }
   const problems = check(load(pkgFile), load(lockFile));
+  if (json) { console.log(JSON.stringify(problems, null, 2)); return problems.length ? 1 : 0; }
   if (!problems.length) { console.log('lockfile matches package.json'); return 0; }
   for (const p of problems) console.log(p.kind.padEnd(8) + p.name + ' (' + p.group + '): ' + p.detail);
   console.log('\n' + problems.length + ' problem' + (problems.length === 1 ? '' : 's') + '. Run `npm install` to update the lockfile.');

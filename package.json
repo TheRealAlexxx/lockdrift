@@ -1,0 +1,9 @@
+{
+  "name": "lockdrift",
+  "version": "0.1.0",
+  "description": "Explain why npm ci would reject your lockfile, offline and with zero dependencies.",
+  "bin": { "lockdrift": "lockdrift.js" },
+  "scripts": { "test": "node --test" },
+  "license": "MIT",
+  "files": ["lockdrift.js", "semver.js"]
+}

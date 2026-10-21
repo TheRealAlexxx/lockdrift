@@ -7,6 +7,8 @@ semver checker.
 `npm ci` fails with "package.json and package-lock.json are not in sync" and
 leaves you to guess which dependency. lockdrift names it.
 
+![lockdrift output](screenshot.png)
+
 ```
 $ npx github:TheRealAlexxx/lockdrift .
 range   left-pad (dependencies): lockfile has 1.3.0, package.json wants ^2.0.0

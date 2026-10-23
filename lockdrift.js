@@ -53,10 +53,36 @@ function load(file) {
   catch (e) { throw new Error(file + ': ' + e.message); }
 }
 
+const VERSION = require('./package.json').version;
+
+const USAGE = `Usage: lockdrift [directory] [--json]
+
+Explain why npm ci would reject your package-lock.json, offline and
+without installing anything.
+
+Arguments:
+  directory        project root with package.json and the lockfile (default: current directory)
+
+Options:
+  --json           machine-readable output
+  -h, --help       show this help
+  --version        show the version
+
+Exit codes: 0 = in sync, 1 = drift found, 2 = usage error.`;
+
 function main(argv) {
-  const dir = argv.find((a) => !a.startsWith('--')) || '.';
+  let json = false;
+  let dir = null;
+  for (const a of argv) {
+    if (a === '-h' || a === '--help') { console.log(USAGE); return 0; }
+    if (a === '--version') { console.log('lockdrift ' + VERSION); return 0; }
+    if (a === '--json') { json = true; continue; }
+    if (a.startsWith('-')) { console.error('unknown option: ' + a + ' (try --help)'); return 2; }
+    if (dir !== null) { console.error('unexpected extra argument: ' + a); return 2; }
+    dir = a;
+  }
+  dir = dir || '.';
   const pkgFile = path.join(dir, 'package.json');
-  const json = argv.includes('--json');
   const lockFile = ['package-lock.json', 'npm-shrinkwrap.json'].map((f) => path.join(dir, f)).find((f) => fs.existsSync(f)) || path.join(dir, 'package-lock.json');
   if (!fs.existsSync(pkgFile)) { console.error('no package.json in ' + dir); return 2; }
   if (!fs.existsSync(lockFile)) { console.error('no package-lock.json in ' + dir); return 2; }

@@ -92,3 +92,22 @@ test('npm-shrinkwrap.json is used when there is no package-lock.json', () => {
   fs.writeFileSync(path.join(dir, 'npm-shrinkwrap.json'), JSON.stringify(lockV3({ dependencies: { a: '^1.0.0' } }, { 'node_modules/a': { version: '1.0.0' } })));
   assert.strictEqual(spawnSync('node', [path.join(__dirname, 'lockdrift.js'), dir]).status, 0);
 });
+
+test('CLI argument handling', () => {
+  const bin = path.join(__dirname, 'lockdrift.js');
+  const help = spawnSync('node', [bin, '--help'], { encoding: 'utf8' });
+  assert.strictEqual(help.status, 0);
+  assert.match(help.stdout, /Usage: lockdrift/);
+  assert.match(help.stdout, /--json/);
+  const short = spawnSync('node', [bin, '-h'], { encoding: 'utf8' });
+  assert.strictEqual(short.status, 0);
+  const ver = spawnSync('node', [bin, '--version'], { encoding: 'utf8' });
+  assert.strictEqual(ver.status, 0);
+  assert.match(ver.stdout, /^lockdrift \d+\.\d+\.\d+/);
+  const bogus = spawnSync('node', [bin, '--bogus'], { encoding: 'utf8' });
+  assert.strictEqual(bogus.status, 2);
+  assert.match(bogus.stderr, /unknown option: --bogus/);
+  const extra = spawnSync('node', [bin, '.', '.'], { encoding: 'utf8' });
+  assert.strictEqual(extra.status, 2);
+  assert.match(extra.stderr, /unexpected extra argument/);
+});

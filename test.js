@@ -111,3 +111,28 @@ test('CLI argument handling', () => {
   assert.strictEqual(extra.status, 2);
   assert.match(extra.stderr, /unexpected extra argument/);
 });
+
+test('malformed or non-object JSON is a clean error, not a stack trace', () => {
+  const bin = path.join(__dirname, 'lockdrift.js');
+  const mk = (pkg, lock) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ld-'));
+    fs.writeFileSync(path.join(dir, 'package.json'), pkg);
+    fs.writeFileSync(path.join(dir, 'package-lock.json'), lock);
+    return dir;
+  };
+  for (const [pkg, lock, want] of [
+    ['{invalid json', '{}', /error: .*package\.json:/],
+    ['{}', '{invalid json', /error: .*package-lock\.json:/],
+    ['null', '{}', /package\.json must contain a JSON object, got null/],
+    ['{}', 'null', /package-lock\.json must contain a JSON object, got null/],
+    ['{}', '[]', /package-lock\.json must contain a JSON object, got an array/],
+    ['[]', '{}', /package\.json must contain a JSON object, got an array/],
+  ]) {
+    const r = spawnSync('node', [bin, mk(pkg, lock)], { encoding: 'utf8' });
+    assert.strictEqual(r.status, 2, pkg + ' / ' + lock);
+    assert.match(r.stderr, want);
+    assert.doesNotMatch(r.stderr, /^\s+at /m);
+  }
+  const ok = spawnSync('node', [bin, mk('{}', '{}')], { encoding: 'utf8' });
+  assert.strictEqual(ok.status, 0);
+});

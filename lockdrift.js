@@ -86,7 +86,21 @@ function main(argv) {
   const lockFile = ['package-lock.json', 'npm-shrinkwrap.json'].map((f) => path.join(dir, f)).find((f) => fs.existsSync(f)) || path.join(dir, 'package-lock.json');
   if (!fs.existsSync(pkgFile)) { console.error('no package.json in ' + dir); return 2; }
   if (!fs.existsSync(lockFile)) { console.error('no package-lock.json in ' + dir); return 2; }
-  const problems = check(load(pkgFile), load(lockFile));
+  let pkg, lock;
+  try {
+    pkg = load(pkgFile);
+    lock = load(lockFile);
+  } catch (e) {
+    console.error('error: ' + e.message);
+    return 2;
+  }
+  for (const [file, parsed] of [[pkgFile, pkg], [lockFile, lock]]) {
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      console.error('error: ' + file + ' must contain a JSON object, got ' + (parsed === null ? 'null' : Array.isArray(parsed) ? 'an array' : typeof parsed));
+      return 2;
+    }
+  }
+  const problems = check(pkg, lock);
   if (json) { console.log(JSON.stringify(problems, null, 2)); return problems.length ? 1 : 0; }
   if (!problems.length) { console.log('lockfile matches package.json'); return 0; }
   for (const p of problems) console.log(p.kind.padEnd(8) + p.name + ' (' + p.group + '): ' + p.detail);

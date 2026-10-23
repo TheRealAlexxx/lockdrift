@@ -18,7 +18,17 @@ missing debug (dependencies): not in the lockfile (package.json wants ^4)
 3 problems. Run `npm install` to update the lockfile.
 ```
 
-Or just `node lockdrift.js [dir]`. Add `--json` for machine-readable output. `npm-shrinkwrap.json` is read when there is no `package-lock.json`. Exit code 0 when in sync, 1 on drift, 2 when
+Or just `node lockdrift.js [dir]`. A drifted demo project ships in the
+repo, so you can see real output without breaking your own lockfile:
+
+```
+$ npx github:TheRealAlexxx/lockdrift examples/drifted
+range   left-pad (dependencies): lockfile has 1.3.0, package.json wants ^2.0.0
+spec    left-pad (dependencies): lockfile root recorded "^1.3.0", package.json now says "^2.0.0"
+missing debug (dependencies): not in the lockfile (package.json wants ^4)
+
+3 problems. Run `npm install` to update the lockfile.
+``` Add `--json` for machine-readable output. `npm-shrinkwrap.json` is read when there is no `package-lock.json`. Exit code 0 when in sync, 1 on drift, 2 when
 a file is missing, so it works as a CI pre-check.
 
 ## What it checks
